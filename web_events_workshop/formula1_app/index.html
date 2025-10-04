@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Moving Cars</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .car {
+            position: absolute;
+            transition: transform 1s;
+        }
+        #car1 { top: 50px; }
+        #car2 { top: 150px; }
+        #car3 { top: 250px; }
+        .controls {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 1000; /* Ensure controls are above cars */
+            background: rgba(255, 255, 255, 0.8); /* Semi-transparent background */
+            padding: 10px;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 0 5px;
+            vertical-align: top;
+        }
+        .finish-line {
+            position: absolute;
+            top: 0;
+            right: 200px;
+            width: 20px;
+            height: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                black 0,
+                black 25px,
+                white 25px,
+                white 50px
+            );
+            background-size: 40px 40px;
+            z-index: 500; /* Above cars but below controls */
+        }
+        .finish-text {
+            position: absolute;
+            top: 10px;
+            right: 220px;
+            font-size: 40px;
+            font-weight: bold;
+            color: black;
+            z-index: 501; /* Above finish line */
+        }
+        .config {
+            display: inline-block;
+            margin-left: 10px;
+            vertical-align: top;
+        }
+        .config label, .config input {
+            display: inline-block;
+            margin: 5px;
+        }
+        .config-row {
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <img id="car1" class="car" src="a1.png" alt="Car 1">
+    <img id="car2" class="car" src="a2.png" alt="Car 2">
+    <img id="car3" class="car" src="a3.png" alt="Car 3">
+    <div class="finish-line"></div>
+    <div class="finish-text">FINISH</div>
+    <div class="controls">
+        <button id="startButton">Start</button>
+        <button id="resetButton">Reset</button>
+        <div class="config">
+            <div class="config-row">
+                <label>Car 1 Speed: <input type="number" id="speed1" value="2" min="1"></label>
+                <label>Car 2 Speed: <input type="number" id="speed2" value="3" min="1"></label>
+                <label>Car 3 Speed: <input type="number" id="speed3" value="1" min="1"></label>
+            </div>
+            <div class="config-row">
+                <label>Car 1 Size: <input type="range" id="size1" value="100" min="50" max="200"></label>
+                <label>Car 2 Size: <input type="range" id="size2" value="100" min="50" max="200"></label>
+                <label>Car 3 Size: <input type="range" id="size3" value="100" min="50" max="200"></label>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            const cars = $('.car');
+            let positions = [0, 0, 0];
+            const finishLine = 1200; // Finish line position
+            let isRunning = false;
+
+            // Initialize sizes
+            cars.each(function(index) {
+                $(this).css('transform', `scale(${($('#size' + (index + 1)).val() / 100)})`);
+            });
+
+            // Update size on slider change
+            $('.config input[type="range"]').on('input', function() {
+                const carId = $(this).attr('id').replace('size', '');
+                $('#car' + carId).css('transform', `scale(${(this.value / 100)})`);
+            });
+
+            function animate() {
+                if (!isRunning) return;
+                let allFinished = true;
+                cars.each(function(index) {
+                    const speed = parseInt($('#speed' + (index + 1)).val());
+                    if (positions[index] < finishLine + 150) { // Allow cars to fully cross
+                        positions[index] += speed;
+                        $(this).css('left', positions[index] + 'px');
+                        allFinished = false;
+                    }
+                });
+                if (!allFinished) {
+                    requestAnimationFrame(animate);
+                }
+            }
+
+            $('#startButton').click(function() {
+                if (!isRunning) {
+                    isRunning = true;
+                    animate();
+                }
+            });
+
+            $('#resetButton').click(function() {
+                positions = [0, 0, 0];
+                cars.each(function(index) {
+                    $(this).css('left', '0px');
+                });
+                // Reset settings to initial values
+                $('#speed1').val(2);
+                $('#speed2').val(3);
+                $('#speed3').val(1);
+                $('#size1').val(100);
+                $('#size2').val(100);
+                $('#size3').val(100);
+                cars.each(function(index) {
+                    $(this).css('transform', `scale(${($('#size' + (index + 1)).val() / 100)})`);
+                });
+                isRunning = false;
+            });
+        });
+    </script>
+</body>
+</html>
