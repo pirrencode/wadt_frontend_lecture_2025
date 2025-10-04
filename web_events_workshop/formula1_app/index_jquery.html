@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Race — jQuery версия (speed + size)</title>
+  <style>
+    :root { --lane-h: 160px; --gap: 18px; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px; background: #f6f7fb; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    h1 { margin: 0 0 14px; font-size: 20px; }
+
+    .panel { display:grid; grid-template-columns: repeat(3, 1fr); gap:16px; margin:14px 0 6px; }
+    .card { background:#fff; border:1px solid rgba(0,0,0,.06); border-radius:12px; padding:12px; box-shadow:0 6px 18px rgba(0,0,0,.07); }
+    .card h3 { margin:0 0 6px; font-size:14px; }
+    .row { display:flex; align-items:center; gap:8px; }
+    .row label { width:62px; color:#444; font-size:13px; }
+    input[type=range] { width:180px; }
+    .val { font-variant-numeric: tabular-nums; min-width: 36px; text-align:right; }
+
+    .lanes { display: flex; flex-direction: column; gap: var(--gap); margin-bottom: 16px; }
+    .lane {
+      position: relative; height: var(--lane-h); background: #fff; overflow: hidden;
+      border-radius: 14px; border: 1px solid rgba(0,0,0,.06); box-shadow: 0 6px 18px rgba(0,0,0,.07);
+    }
+    .lane::before {
+      content:""; position:absolute; left:0; right:0; top:50%; height:4px; transform:translateY(-50%);
+      background: repeating-linear-gradient(90deg,#ddd 0 24px, transparent 24px 42px); opacity:.6;
+    }
+    .finish {
+      position: absolute; right: 22px; top: 0; width: 28px; height: 100%;
+      background: conic-gradient(#000 0 25%,#fff 0 50%,#000 0 75%,#fff 0) 0 0/14px 14px;
+      outline: 2px solid #1112; outline-offset: -2px;
+    }
+    .car {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      left: -30vw; height: calc(var(--lane-h) - 24px);
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,.18));
+    }
+
+    .controls { display:flex; justify-content:center; gap:12px; margin-top:10px; flex-wrap: wrap; }
+    button { padding:12px 18px; border:0; border-radius:12px; background:#111; color:#fff; cursor:pointer; }
+    button:active { transform: translateY(1px); }
+
+    @media (max-width: 900px) { .panel { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) { :root { --lane-h: 130px; } }
+  </style>
+
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+          integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+          crossorigin="anonymous"></script>
+</head>
+<body>
+  <h1>Гонка (jQuery) — параметры скорости и размера</h1>
+
+  <!-- Панель параметров -->
+  <div class="panel">
+    <div class="card" data-car="1">
+      <h3>Car 1</h3>
+      <div class="row">
+        <label for="speed1">Speed</label>
+        <input id="speed1" type="range" min="1" max="10" value="8" step="1">
+        <span class="val" id="speed1v">8</span>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <label for="size1">Size</label>
+        <input id="size1" type="range" min="60" max="120" value="100" step="5">
+        <span class="val" id="size1v">100%</span>
+      </div>
+    </div>
+
+    <div class="card" data-car="2">
+      <h3>Car 2</h3>
+      <div class="row">
+        <label for="speed2">Speed</label>
+        <input id="speed2" type="range" min="1" max="10" value="6" step="1">
+        <span class="val" id="speed2v">6</span>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <label for="size2">Size</label>
+        <input id="size2" type="range" min="60" max="120" value="100" step="5">
+        <span class="val" id="size2v">100%</span>
+      </div>
+    </div>
+
+    <div class="card" data-car="3">
+      <h3>Car 3</h3>
+      <div class="row">
+        <label for="speed3">Speed</label>
+        <input id="speed3" type="range" min="1" max="10" value="4" step="1">
+        <span class="val" id="speed3v">4</span>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <label for="size3">Size</label>
+        <input id="size3" type="range" min="60" max="120" value="100" step="5">
+        <span class="val" id="size3v">100%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Трасса -->
+  <div id="race" class="lanes">
+    <div class="lane">
+      <img class="car car--1" src="./img/car1.jpeg" alt="Car 1">
+      <div class="finish" aria-hidden="true"></div>
+    </div>
+    <div class="lane">
+      <img class="car car--2" src="./img/car2.jpeg" alt="Car 2">
+      <div class="finish" aria-hidden="true"></div>
+    </div>
+    <div class="lane">
+      <img class="car car--3" src="./img/car3.jpeg" alt="Car 3">
+      <div class="finish" aria-hidden="true"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="btnJQ">Race</button>
+  </div>
+
+  <script>
+    $(function () {
+      const $race = $('#race');
+      const gap = 6;
+
+      // синхронизация отображения значений
+      function syncLabels() {
+        $('#speed1v').text($('#speed1').val());
+        $('#speed2v').text($('#speed2').val());
+        $('#speed3v').text($('#speed3').val());
+        $('#size1v').text($('#size1').val() + '%');
+        $('#size2v').text($('#size2').val() + '%');
+        $('#size3v').text($('#size3').val() + '%');
+      }
+      $('input[type=range]').on('input change', syncLabels);
+      syncLabels();
+
+      function computeTarget($lane, $car) {
+        const finishLeft = $lane.find('.finish').position().left; // px от левого края lane
+        const carW = $car[0].getBoundingClientRect().width;
+        return finishLeft - carW - gap; // остановка у шашечек
+      }
+
+      function resetCars() {
+        $race.find('.car').each(function(){
+          $(this).stop(true, true).css({ left: '-30vw' });
+        });
+      }
+
+      // скорость (1..10) -> длительность (мс): больше скорость — меньше время
+      function durationFromSpeed(speed, distancePx) {
+        const k = 60; // px/сек на единицу скорости
+        const seconds = distancePx / (k * speed);
+        return Math.max(400, seconds * 1000);
+      }
+
+      function applySizes() {
+        const hBase = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--lane-h'));
+        const sizes = [$('#size1').val(), $('#size2').val(), $('#size3').val()].map(Number);
+        $race.find('.lane').each(function(i) {
+          const $car = $(this).find('.car');
+          const h = (hBase - 24) * (sizes[i] / 100);
+          $car.css('height', h + 'px');
+        });
+      }
+
+      function startRace() {
+        applySizes();
+        resetCars();
+
+        const speeds = [$('#speed1').val(), $('#speed2').val(), $('#speed3').val()].map(Number);
+        const $lanes = $race.find('.lane');
+        const $car1 = $lanes.eq(0).find('.car');
+        const $car2 = $lanes.eq(1).find('.car');
+        const $car3 = $lanes.eq(2).find('.car');
+
+        const t1 = computeTarget($lanes.eq(0), $car1);
+        const t2 = computeTarget($lanes.eq(1), $car2);
+        const t3 = computeTarget($lanes.eq(2), $car3);
+
+        const d1 = Math.abs(t1 - $car1.position().left);
+        const d2 = Math.abs(t2 - $car2.position().left);
+        const d3 = Math.abs(t3 - $car3.position().left);
+
+        const dur1 = durationFromSpeed(speeds[0], d1);
+        const dur2 = durationFromSpeed(speeds[1], d2);
+        const dur3 = durationFromSpeed(speeds[2], d3);
+
+        $car1.animate({ left: t1 }, dur1, 'linear');
+        $car2.animate({ left: t2 }, dur2, 'linear');
+        $car3.animate({ left: t3 }, dur3, 'linear');
+      }
+
+      $('#btnJQ').on('click', startRace);
+      startRace();
+
+      $(window).on('resize', function(){
+        if (!$race.find('.car').is(':animated')) startRace();
+      });
+    });
+  </script>
+</body>
+</html>
