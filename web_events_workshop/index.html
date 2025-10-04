@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>3 Car Race</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #ccc;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    .track {
+      position: relative;
+      width: 100%;
+      height: 200px;
+      margin-bottom: 40px;
+      background-color: #fff;
+      border: 2px solid #333;
+    }
+
+    .car {
+      position: absolute;
+      width: 100px;
+      height: auto;
+      left: 0;
+      transition: left 0.05s linear;
+    }
+
+    #car1 { top: 20px; }
+    #car2 { top: 80px; }
+    #car3 { top: 140px; }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .winner {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>3 Car Race</h2>
+  <div class="track">
+    <img id="car1" class="car" src="assets/A1.png" alt="Formula 1">
+    <img id="car2" class="car" src="assets/A2.png" alt="Formula 2">
+    <img id="car3" class="car" src="assets/A3.png" alt="Formula 3">
+  </div>
+
+  <button onclick="startRace()">Start Race</button>
+
+  <div class="winner" id="winnerText"></div>
+
+  <script>
+    function startRace() {
+      const cars = [
+        { id: 'car1', pos: 0 },
+        { id: 'car2', pos: 0 },
+        { id: 'car3', pos: 0 }
+      ];
+
+      const winnerText = document.getElementById('winnerText');
+      winnerText.textContent = '';
+
+      const finishLine = window.innerWidth - 120; // Subtract car width + margin
+
+      // Reset positions
+      cars.forEach(car => {
+        car.pos = 0;
+        document.getElementById(car.id).style.left = '0px';
+      });
+
+      let raceOver = false;
+
+      const interval = setInterval(() => {
+        cars.forEach(car => {
+          if (!raceOver) {
+            car.pos += Math.random() * 10;
+            document.getElementById(car.id).style.left = car.pos + 'px';
+
+            if (car.pos >= finishLine && !raceOver) {
+              raceOver = true;
+              clearInterval(interval);
+              winnerText.textContent = `🏁 ${car.id.toUpperCase()} Wins!`;
+            }
+          }
+        });
+      }, 50);
+    }
+  </script>
+
+</body>
+</html>
+
