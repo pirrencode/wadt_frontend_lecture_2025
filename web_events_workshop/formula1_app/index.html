@@ -1,8 +1,8 @@
-<!-- st81839 -->
 <!DOCTYPE html>
 <html>
 <head>
     <title>Moving Cars</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         .car {
             position: absolute;
@@ -47,108 +47,38 @@
     <img id="car3" class="car" src="a3.png" alt="Car 3">
     <div class="finish-line"></div>
     <div class="finish-text">FINISH</div>
-    <button onclick="startAnimation()">Start</button>
+    <button id="startButton">Start</button>
 
     <script>
-        const cars = document.querySelectorAll('.car');
-        const speeds = [2, 3, 1]; // Speeds in pixels per frame
-        let positions = [0, 0, 0];
-        const finishLine = 1200; // Finish line position
-        let isRunning = false;
+        $(document).ready(function() {
+            const cars = $('.car');
+            const speeds = [2, 3, 1]; // Speeds in pixels per frame
+            let positions = [0, 0, 0];
+            const finishLine = 1200; // Finish line position
+            let isRunning = false;
 
-        function animate() {
-            if (!isRunning) return;
-            cars.forEach((car, index) => {
-                if (positions[index] < finishLine + 150) { // Allow cars to fully cross finish line
-                    positions[index] += speeds[index];
-                    car.style.left = positions[index] + 'px';
+            function animate() {
+                if (!isRunning) return;
+                let allFinished = true;
+                cars.each(function(index) {
+                    if (positions[index] < finishLine + 150) { // Allow cars to fully cross
+                        positions[index] += speeds[index];
+                        $(this).css('left', positions[index] + 'px');
+                        allFinished = false;
+                    }
+                });
+                if (!allFinished) {
+                    requestAnimationFrame(animate);
+                }
+            }
+
+            $('#startButton').click(function() {
+                if (!isRunning) {
+                    isRunning = true;
+                    animate();
                 }
             });
-            if (positions.some(pos => pos < finishLine + 150)) {
-                requestAnimationFrame(animate);
-            }
-        }
-
-        function startAnimation() {
-            isRunning = true;
-            animate();
-        }
-    </script>
-</body>
-</html><!DOCTYPE html>
-<html>
-<head>
-    <title>Moving Cars</title>
-    <style>
-        .car {
-            position: absolute;
-            transition: transform 1s;
-        }
-        #car1 { top: 50px; }
-        #car2 { top: 150px; }
-        #car3 { top: 250px; }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            margin-top: 10px;
-        }
-        .finish-line {
-            position: absolute;
-            top: 0;
-            right: 200px; /* Finish line position */
-            width: 20px;
-            height: 100%;
-            background: repeating-linear-gradient(
-                45deg,
-                black 0,
-                black 25px,
-                white 25px,
-                white 50px
-            );
-            background-size: 40px 40px;
-        }
-        .finish-text {
-            position: absolute;
-            top: 10px;
-            right: 220px;
-            font-size: 40px;
-            font-weight: bold;
-            color: black;
-        }
-    </style>
-</head>
-<body>
-    <img id="car1" class="car" src="a1.png" alt="Car 1">
-    <img id="car2" class="car" src="a2.png" alt="Car 2">
-    <img id="car3" class="car" src="a3.png" alt="Car 3">
-    <div class="finish-line"></div>
-    <div class="finish-text">FINISH</div>
-    <button onclick="startAnimation()">Start</button>
-
-    <script>
-        const cars = document.querySelectorAll('.car');
-        const speeds = [2, 3, 1]; // Speeds in pixels per frame
-        let positions = [0, 0, 0];
-        const finishLine = 1200; // Finish line position
-        let isRunning = false;
-
-        function animate() {
-            if (!isRunning) return;
-            cars.forEach((car, index) => {
-                if (positions[index] < finishLine + 150) { // Allow cars to fully cross finish line
-                    positions[index] += speeds[index];
-                    car.style.left = positions[index] + 'px';
-                }
-            });
-            if (positions.some(pos => pos < finishLine + 150)) {
-                requestAnimationFrame(animate);
-            }
-        }
-
-        function startAnimation() {
-            isRunning = true;
-            animate();
-        }
+        });
     </script>
 </body>
 </html>
